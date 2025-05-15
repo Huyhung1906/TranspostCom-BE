@@ -8,7 +8,10 @@ from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.permissions import AllowAny 
 from .serializers import LoginSerializer
-
+from utils.vn_mess import *
+from utils.customresponse import success_response,error_response
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import AllowAny
 
 class RegisterUserView(APIView):
     permission_classes = [AllowAny]
@@ -16,11 +19,9 @@ class RegisterUserView(APIView):
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response({
-                "message": "Đăng ký thành công!",
-                "status":status.HTTP_201_CREATED,
-                "data":"",}, status=status.HTTP_201_CREATED)
-        return Response({"message": serializer.errors, "status" :status.HTTP_400_BAD_REQUEST,"data":""})
+            return success_response(REGISTER_SUCCESS)
+        return error_response(serializer.errors)
+
 class LoginView(generics.GenericAPIView):
     permission_classes = [AllowAny]
     serializer_class = LoginSerializer
@@ -34,27 +35,13 @@ class LoginView(generics.GenericAPIView):
             refresh = RefreshToken.for_user(user)
             access_token = str(refresh.access_token)
             refresh_token = str(refresh)
-
-            # Lưu vào DB nếu muốn
-            user.accesstoken = access_token
-            user.refreshtoken = refresh_token
-            user.save()
+            data = {
+                "user": UserSerializer(user).data,
+                "access_token": access_token
+            }
 
             # Tạo response
-            response = Response({
-                "data": {
-                    "access_token": access_token,
-                    "user": {
-                        "id": user.id,
-                        "username": user.username,
-                        "email": user.email,
-                        "role": user.role,
-                        "phone": user.phone,
-                    }
-                },
-                "message": "Đăng nhập thành công!",
-                "errors": None,
-            }, status=status.HTTP_200_OK)
+            response = success_response(LOGIN_SUCCESS,data)
 
             response.set_cookie(
                 key='refresh_token',
@@ -67,10 +54,7 @@ class LoginView(generics.GenericAPIView):
             )
             return response
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.permissions import AllowAny
-
+        return error_response(serializer.errors)
 
 class RefreshTokenView(APIView):
     permission_classes = [AllowAny]
@@ -80,20 +64,19 @@ class RefreshTokenView(APIView):
         print("🔎 Refresh token nhận được:", refresh_token)
 
         if not refresh_token:
-            return Response({'error': 'No refresh token'}, status=status.HTTP_400_BAD_REQUEST)
+            return error_response(NOT_FOUND.format(object="refresh token"))
 
         try:
             token = RefreshToken(refresh_token)
-            print("✅ Token giải mã OK")
-            print("➡️ Payload:", token.payload)
-
             access_token = str(token.access_token)
-
             user = User.objects.get(id=token['user_id'])
-            user.accesstoken = access_token
-            user.save()
-
-            response = Response({'access_token': access_token}, status=status.HTTP_200_OK)
+            data = {
+                "access_token": access_token
+            }
+            response = success_response(
+                REFRESH_TOKEN_SUCCESS,
+                data
+            )
             response.set_cookie(
                 key='refresh_token',
                 value=refresh_token,
@@ -106,41 +89,34 @@ class RefreshTokenView(APIView):
             return response
 
         except Exception as e:
-            print("❌ Token error:", str(e))  # Log chính xác lỗi
-            return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+            return error_response(INVALID_TOKEN)
+
 class ListUsersView(APIView):
     def get(self, request):
         user = User.objects.all()
+        if not user.exists():
+            return error_response(NOT_FOUND.format(object="Người dùng"))
+        
         serializer = UserSerializer(user, many=True)
-        return Response({
-            "data": serializer.data,
-            "message": "Lấy danh sách người dùng thành công!",
-            "status":status.HTTP_201_CREATED,
-            }, status=status.HTTP_200_OK)
+        return success_response(GET_SUCCESS.format(object="Người dùng"), serializer.data)
 
 @api_view(['GET'])
 def GetUserbyIdView(request, id):
     user = User.objects.filter(id=id)
     serializer = UserSerializer(user, many=True)
-    return Response({
-            "data":{
-                "user":{
-                "id": user.id,
-                "fullname":user.fullname,
-                "username": user.username,
-                "email": user.email,
-                }
-            },
-            "message": "Lấy thông tin người dùng thành công!",
-            "status": status.HTTP_200_OK,
-            
-        },status=status.HTTP_200_OK)
+    if not user.exists():
+        return error_response(NOT_FOUND.format(object=f"Người dùng id:{id}"))
+    return success_response(GET_DETAIL_SUCCESS.format(object=f"Người dùng id:{id}"),serializer.data)
 
 @api_view(['GET'])
 def GetUserbyTokenView(request, accesstoken):
-    users = User.objects.filter(accesstoken=accesstoken)
-    serializer = UserSerializer(users, many=True)
-    return Response(serializer.data)
+    try:
+        user = User.objects.get(accesstoken=accesstoken)
+    except User.DoesNotExist:
+        return error_response(NOT_FOUND.format(object="Người dùng"))
+
+    serializer = UserSerializer(user)
+    return success_response(GET_DETAIL_SUCCESS.format(object="Người dùng"), serializer.data)
 
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]
@@ -149,21 +125,11 @@ class UserProfileView(APIView):
         print(request.headers)  # DEBUG
 
         user = request.user  # Django tự lấy user từ access_token trong header
+        data = {
+            "user": UserSerializer(user).d
+        }
+        return success_response(GET_DETAIL_SUCCESS.format(object="Người dùng"), data)
 
-        return Response({
-            "data":{
-                "user":{
-                "id": user.id,
-                "fullname":user.fullname,
-                "username": user.username,
-                "email": user.email,
-                }
-            },
-            "message": "Lấy thông tin người dùng thành công!",
-            "status": status.HTTP_200_OK,
-            
-        },status=status.HTTP_200_OK)
-# Đăng xuất người dùng
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -171,43 +137,34 @@ class LogoutView(APIView):
         try:
             user = request.user
             # Xóa cookie refresh_token ở trình duyệt
-            response = Response({
-                "message": "Đăng xuất thành công!"
-            }, status=status.HTTP_200_OK)
+            response = success_response(LOGOUT_SUCCESS)
             response.delete_cookie('refresh_token')
 
             return response
         except Exception as e:
-            return Response({
-                "error": "Có lỗi xảy ra trong quá trình đăng xuất.",
-                "details": str(e)
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)    
+            return error_response(SERVER_ERROR)
+        
 class UpdateUserView(APIView):
     def put(self, request, pk):
         try:
             user = User.objects.get(pk=pk)
         except User.DoesNotExist:
-            return Response({"message": "Người dùng không tồn tại.","data":""}, status=status.HTTP_404_NOT_FOUND)
-
+            return error_response(NOT_FOUND.format(object="Người dùng"))
         serializer = UserSerializer(user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            return Response({"message": "Cập nhật người dùng thành công!", "data": serializer.data}, status=status.HTTP_200_OK)
-        return Response({"message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-
-# Xóa người dùng
+            return success_response(UPDATE_SUCCESS.format(object="Người dùng"),serializer.data)
+        return error_response(serializer.errors)
+    
 class DeleteUserView(APIView):
     def delete(self, request, pk):
         try:
             user = User.objects.get(pk=pk)
         except User.DoesNotExist:
-            return Response({
-                "message": "Người dùng không tồn tại.",
-                "data":""}
-                , status=status.HTTP_404_NOT_FOUND)
-
+            return error_response(NOT_FOUND.format(object="Người dùng"))
+        serializer = UserSerializer(user, data=request.data, partial=True)
         user.delete()
-        return Response({
-            "message": "Xóa người dùng thành công!",
-            "data":""}
-            , status=status.HTTP_204_NO_CONTENT)
+        if serializer.is_valid():
+            serializer.save()
+            return success_response(DELETE_SUCCESS.format(object="Người dùng"),serializer.data)
+        return error_response(serializer.errors)

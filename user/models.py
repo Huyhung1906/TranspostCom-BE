@@ -31,7 +31,9 @@ class User(AbstractBaseUser,PermissionsMixin):
     is_superuser = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
 
-
+    groups = None
+    user_permissions = None
+    
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email'] 
     objects = UserManager()
