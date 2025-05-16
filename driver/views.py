@@ -1,53 +1,57 @@
 from django.shortcuts import render
-# Sự kiện thêm mới Artist ( Nghệ sĩ )
 from .serializers import DriverSerializer
 from rest_framework import status, generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.decorators import api_view
 from .models import Driver
+from utils.vn_mess import *
+from utils.customresponse import *
 
 class CreateDriverView(APIView):
-    def post(self, request):
-        serializer = DriverSerializer(data=request.data)
+    def post(seft, request):
+        serializer = DriverSerializer(data = request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response({
-                "message": "Thêm tài xế thành công!",
-                "data": serializer.data,
-                "status": status.HTTP_201_CREATED
-            }, status=status.HTTP_201_CREATED)
-        return Response({
-            "message": serializer.errors,
-            "status": status.HTTP_400_BAD_REQUEST
-        }, status=status.HTTP_400_BAD_REQUEST)
-class UpdateDriverView(APIView):
+            return success_response(CREATE_SUCCESS,serializer.data)
+        return error_response(serializer.errors)
+        
+class updatedriverview(APIView):
     def put(self, request,pk):
-        serializer = DriverSerializer(data= request.data)
+        try:
+            driver = Driver.objects.get(pk=pk)
+        except Driver.DoesNotExist:
+            return error_response(NOT_FOUND.format(object="Tài xế"))
+        serializer = DriverSerializer(instance=driver, data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response({
-                "message": "Cập nhập thông tin tài xế thành công.!",
-                "data": {
-                    "driver":serializer.data,
-                },
-                "status": status.HTTP_201_CREATED
-            }, status = status.HTTP_201_CREATED)
-        return Response({
-            "message": serializer.errors,
-            "status": status.HTTP_400_BAD_REQUEST
-        }, status=status.HTTP_400_BAD_REQUEST)
-class DeleteDriver(APIView):
-    def delete(self, request, id):
+            return success_response(UPDATE_SUCCESS.format(object="thông tin Tài xế"),serializer.data)
+        return error_response(serializer.error_messages)
+    
+class listdriverview(APIView):
+    def get(self, request):
+        driver = Driver.objects.all()
+        if not driver.exists():
+            return error_response(NOT_FOUND.format(object="Tài xế"))
+        serializer = DriverSerializer(driver, many=True)
+        return success_response(GET_SUCCESS.format(object="Tài xế"), serializer.data)
+    
+class deletedriverview(APIView):
+    def delete(self, request, pk):
         try:
-            driver = Driver.objects.get(pk=id)
-            fullname = driver.fullname
-            driver.delete()
-            return Response({
-                "message": f"Xóa tài xế {fullname} thành công!",
-                "status": status.HTTP_200_OK
-                },
-                status=status.HTTP_200_OK)
+            driver = Driver.objects.get(pk=pk)
         except Driver.DoesNotExist:
-            return Response({
-                            "message": f"Bài hát với id={artist_id} không tồn tại."},
-                            status=status.HTTP_404_NOT_FOUND)
+            return error_response(NOT_FOUND.format(object="Tài xế"))
+        serializer = DriverSerializer(driver,data = request.data,partial= True)
+        driver.delete()
+        if serializer.is_valid():
+            return success_response(DELETE_SUCCESS.format(object="Tài xế"),serializer.data)
+        return error_response(serializer.errors)
+    
+@api_view(['GET'])
+def getdriverbyidview(request,id):
+    driver = Driver.objects.filter(id=id)
+    serializer = DriverSerializer(driver, many = True)
+    if not driver.exists():
+        return error_response(NOT_FOUND.format(object=f"Tài xế id: {id}"))
+    return success_response(GET_DETAIL_SUCCESS.format(object=f"Tài xế id: {id}"),serializer.data)

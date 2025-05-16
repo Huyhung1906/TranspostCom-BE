@@ -126,7 +126,7 @@ class UserProfileView(APIView):
 
         user = request.user  # Django tự lấy user từ access_token trong header
         data = {
-            "user": UserSerializer(user).d
+            "user": UserSerializer(user).data
         }
         return success_response(GET_DETAIL_SUCCESS.format(object="Người dùng"), data)
 
