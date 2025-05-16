@@ -7,4 +7,4 @@ urlpatterns = [
     path('getbus/<int:id>/', getbusbyidview, name='get'),
     path('list', listbusview.as_view(), name='list'),
 
-]
+]   

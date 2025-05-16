@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'driver',
     'ticket',
     'bus',
+    'route',
 ]
 
 MIDDLEWARE = [
