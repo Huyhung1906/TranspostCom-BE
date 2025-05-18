@@ -1,7 +1,7 @@
 from rest_framework import serializers
-from .models import Bus
+from .models import Vehicle
 
-class busserializer(serializers.ModelSerializer):
+class vehicleserializer(serializers.ModelSerializer):
     class Meta:
-        model = Bus
+        model = Vehicle
         fields = ['id','name','type','chair','licenseplate']

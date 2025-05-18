@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'invoice',
     'driver',
     'ticket',
-    'bus',
+    'vehicle',
     'route',
 ]
 
