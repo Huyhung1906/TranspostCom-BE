@@ -220,3 +220,15 @@ class UpdateTripIsActiveView(APIView):
             UPDATE_SUCCESS.format(object="Trạng thái Chuyến đi"),
             data=serializer.data
         )
+class starttripview(APIView):
+    def post(self, request, pk):
+        trip = get_object_or_404(Trip, pk=pk)
+
+        # Cập nhật notes khi xuất phát
+        trip.notes = START
+        trip.save()
+        data = {
+            "trip_id": trip.id,
+            "notes": trip.notes
+        }
+        return success_response(UPDATE_SUCCESS.format(object="Trạng thái xuất phát"),data)

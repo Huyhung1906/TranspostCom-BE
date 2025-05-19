@@ -10,4 +10,5 @@ urlpatterns = [
     path('bydate/', tripbydateview.as_view(), name='trip-by-date'),
     path('bytimeonday/', tripbytimeondayview.as_view(), name='trip-by-time-on-day'),
     path('byroute/', tripbyroutebiew.as_view(), name='trip-by-route'),
+    path('<int:pk>/start/', starttripview.as_view(), name='trip-start'),
 ]
