@@ -7,7 +7,7 @@ from .models import Trip
 from utils.customresponse import *
 from utils.vn_mess import *
 from django.shortcuts import get_object_or_404
-from datetime import datetime, time
+from datetime import datetime, time,timedelta
 from django.utils.dateparse import parse_date, parse_datetime
 
 class createtripview(APIView):
@@ -85,3 +85,63 @@ class tripbyroutebiew(APIView):
             )
         except Exception as e:
             return error_response(str(e))
+class createmultipletripsview(APIView):
+    def post(self, request):
+        try:
+            route_id = request.data['route_id']
+            vehicle_id = request.data['vehicle_id']
+            driver_id = request.data['driver_id']
+            start_date = parse_date(request.data['start_date'])
+            end_date = parse_date(request.data['end_date'])
+            departure_time = datetime.strptime(request.data['time'], "%H:%M").time()
+        except KeyError as e:
+            return error_response(MISSING_PARAM.format(param=str(e)))
+        except ValueError:
+            return error_response(INVALID_DATE_TIME_FORMAT)
+
+        if start_date > end_date:
+            return error_response(START_DATE_GREATER_THAN_END_DATE)
+
+        trips_created = []
+        current_date = start_date
+        while current_date <= end_date:
+            departure_datetime = datetime.combine(current_date, departure_time)
+            trip = Trip.objects.create(
+                route_id=route_id,
+                vehicle_id=vehicle_id,
+                driver_id=driver_id,
+                departure_time=departure_datetime
+            )
+            trips_created.append(trip)
+            current_date += timedelta(days=1)
+
+        serializer = tripserializer(trips_created, many=True)
+        return success_response(
+            CREATED_MULTIPLE_TRIPS.format(
+                count=len(trips_created),
+                start_date=start_date,
+                end_date=end_date,
+                time=departure_time.strftime("%H:%M")
+            ),
+            data=serializer.data
+        )
+class UpdateTripIsActiveView(APIView):
+    def patch(self, request, pk):
+        try:
+            trip = Trip.objects.get(pk=pk)
+        except Trip.DoesNotExist:
+            return error_response(NOT_FOUND.format(object="Chuyến đi"))
+
+        is_active = request.data.get('is_active')
+        if is_active is None:
+            return error_response(MISSING_PARAM.format(param="is_active"))
+
+        if not isinstance(is_active, bool):
+            return error_response(INVALID_ACTIVE)
+        trip.is_active = is_active
+        trip.save()
+        serializer = tripserializer(trip)
+        return success_response(
+            UPDATE_SUCCESS.format(object="Trạng thái Chuyến đi"),
+            data=serializer.data
+        )

@@ -35,4 +35,7 @@ MISSING_PARAM = "Thiếu tham số {params}"
 INVALID_DATE = "Ngày không hợp lệ"
 INVALID_DATE_TIME_FORMAT = "Định dạng ngày hoặc giờ không hợp lệ"
 FOUND_TRIPS_BY_ROUTE = "Tìm thấy {count} chuyến đi theo tuyến có mã {route_id}"
+CREATED_MULTIPLE_TRIPS = "Tạo thành công {count} chuyến đi từ {start_date} đến {end_date} lúc {time}"
 
+START_DATE_GREATER_THAN_END_DATE = "Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc"
+INVALID_ACTIVE = "Trường is_active phải là kiểu boolean."
