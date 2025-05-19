@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'ticket',
     'vehicle',
     'route',
+    'trip',
 ]
 
 MIDDLEWARE = [

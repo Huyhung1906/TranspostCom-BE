@@ -28,3 +28,11 @@ LOGIN_FAIL = "Tên đăng nhập hoặc mật khẩu không đúng."
 USER_NOT_FOUND = "Tài khoản không tồn tại."
 PASSWORD_INCORRECT = "Mật khẩu không đúng."
 ACCOUNT_DISABLED= "Tài khoản đã bị vô hiệu hóa."
+#Thông báo dành cho lọc ngày
+FOUND_TRIPS_BY_DATE = "Tìm thấy {count} chuyến đi trong ngày {date}"
+FOUND_TRIPS_BY_TIME_ON_DAY = "Tìm thấy {count} chuyến đi trong khoảng thời gian {start_time} ngày {date}"
+MISSING_PARAM = "Thiếu tham số {params}"
+INVALID_DATE = "Ngày không hợp lệ"
+INVALID_DATE_TIME_FORMAT = "Định dạng ngày hoặc giờ không hợp lệ"
+FOUND_TRIPS_BY_ROUTE = "Tìm thấy {count} chuyến đi theo tuyến có mã {route_id}"
+
