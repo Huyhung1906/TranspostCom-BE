@@ -6,6 +6,7 @@ from .serializers import tripserializer
 from .models import Trip
 from utils.customresponse import *
 from utils.vn_mess import *
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from datetime import datetime, time,timedelta
 from django.utils.dateparse import parse_date, parse_datetime
@@ -14,17 +15,91 @@ class createtripview(APIView):
     def post(self, request, format=None):
         serializer = tripserializer(data=request.data)
         if serializer.is_valid():
+            departure_time = serializer.validated_data.get('departure_time')
+            route = serializer.validated_data.get('route')
+            vehicle = serializer.validated_data.get('vehicle')
+            driver = serializer.validated_data.get('driver')
+
+            est_time = route.estimated_time
+            arrival_time = departure_time + timedelta(
+                hours=est_time.hour,
+                minutes=est_time.minute,
+                seconds=est_time.second
+            )
+
+            # Kiểm tra trùng lịch
+            overlapping_trips = Trip.objects.filter(
+                is_active=True,
+                departure_time__lt=arrival_time,
+                arrival_time__gt=departure_time
+            ).filter(
+                Q(driver=driver) | Q(vehicle=vehicle)
+            )
+            if overlapping_trips.exists():
+                return error_response(BUSY)
+
+            # Kiểm tra điểm xuất phát hợp lệ
+            last_trip = Trip.objects.filter(
+                is_active=True,
+                departure_time__lt=departure_time,
+                driver=driver,
+                vehicle=vehicle
+            ).order_by('-departure_time').first()
+
+            if last_trip and route.departure_point != last_trip.route.destination_point:
+                return error_response(INVALID_ROUTE_LOCATION.format(current_location=last_trip.route.destination_point,departure_location=route.departure_point))
+
+            # Lưu chuyến
             trip = serializer.save()
-            return success_response(CREATE_SUCCESS.format(object="Chuyến"),tripserializer(trip).data)
+            return success_response(CREATE_SUCCESS.format(object="Chuyến"), tripserializer(trip).data)
         return error_response(serializer.errors,CREATE_ERROR)
 class updatetripview(APIView):
     def put(self, request, pk):
         trip = get_object_or_404(Trip, pk=pk)
         serializer = tripserializer(trip, data=request.data, partial=True)
         if serializer.is_valid():
+            departure_time = serializer.validated_data.get('departure_time', trip.departure_time)
+            route = serializer.validated_data.get('route', trip.route)
+            vehicle = serializer.validated_data.get('vehicle', trip.vehicle)
+            driver = serializer.validated_data.get('driver', trip.driver)
+
+            est_time = route.estimated_time
+            arrival_time = departure_time + timedelta(
+                hours=est_time.hour,
+                minutes=est_time.minute,
+                seconds=est_time.second
+            )
+            # Kiểm tra trùng lịch (ngoại trừ chính trip đang update)
+            overlapping_trips = Trip.objects.filter(
+                is_active=True,
+                departure_time__lt=arrival_time,
+                arrival_time__gt=departure_time
+            ).exclude(pk=trip.pk).filter(
+                Q(driver=driver) | Q(vehicle=vehicle)
+            )
+            if overlapping_trips.exists():
+                return error_response(BUSY)
+
+            # Kiểm tra điểm xuất phát hợp lệ
+            last_trip = Trip.objects.filter(
+                is_active=True,
+                departure_time__lt=departure_time,
+                driver=driver,
+                vehicle=vehicle
+            ).exclude(pk=trip.pk).order_by('-departure_time').first()
+
+            if last_trip and route.departure_point != last_trip.route.destination_point:
+                return error_response(INVALID_ROUTE_LOCATION.format(
+                    current_location=last_trip.route.destination_point,
+                    departure_location=route.departure_point
+                ))
+
+            # Cập nhật chuyến
             serializer.save()
-            return success_response(UPDATE_SUCCESS.format(object="Chuyến"),serializer.data)
-        return error_response(serializer.errors,UPDATE_ERROR.format(object="Chuyến"))
+            return success_response(UPDATE_SUCCESS.format(object="Chuyến"), serializer.data)
+
+        return error_response(serializer.errors, UPDATE_ERROR.format(object="Chuyến"))
+
 class deletetripview(APIView):
     def delete(self, request, pk):
         try:

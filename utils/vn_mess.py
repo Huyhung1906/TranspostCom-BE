@@ -39,3 +39,5 @@ CREATED_MULTIPLE_TRIPS = "Tạo thành công {count} chuyến đi từ {start_da
 
 START_DATE_GREATER_THAN_END_DATE = "Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc"
 INVALID_ACTIVE = "Trường is_active phải là kiểu boolean."
+BUSY = "Tài xế hoặc xe đã bận trong khoảng thời gian này."
+INVALID_ROUTE_LOCATION = "Tài xế và xe hiện đang ở {current_location}, không thể khởi hành từ {departure_location}."
