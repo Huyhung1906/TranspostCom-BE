@@ -6,53 +6,93 @@ from .serializers import tripserializer
 from .models import Trip
 from utils.customresponse import *
 from utils.vn_mess import *
+from ticket.models import Ticket 
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from datetime import datetime, time,timedelta
 from django.utils.dateparse import parse_date, parse_datetime
+from ticket.serializers import ticketserializer  # Import serializer vé
+
 
 class createtripview(APIView):
     def post(self, request, format=None):
         serializer = tripserializer(data=request.data)
         if serializer.is_valid():
-            departure_time = serializer.validated_data.get('departure_time')
-            route = serializer.validated_data.get('route')
-            vehicle = serializer.validated_data.get('vehicle')
-            driver = serializer.validated_data.get('driver')
+            trip = self.create_trip(serializer)
+            tickets_data = self.create_tickets_for_trip(trip)
+            
+            response_data = {
+                "trip": tripserializer(trip).data,
+                "tickets": tickets_data
+            }
+            return success_response(CREATE_SUCCESS.format(object="Chuyến"), response_data)
 
-            est_time = route.estimated_time
-            arrival_time = departure_time + timedelta(
-                hours=est_time.hour,
-                minutes=est_time.minute,
-                seconds=est_time.second
-            )
+        return error_response(serializer.errors, CREATE_ERROR)
 
-            # Kiểm tra trùng lịch
-            overlapping_trips = Trip.objects.filter(
-                is_active=True,
-                departure_time__lt=arrival_time,
-                arrival_time__gt=departure_time
-            ).filter(
-                Q(driver=driver) | Q(vehicle=vehicle)
-            )
-            if overlapping_trips.exists():
-                return error_response(BUSY)
+    def create_trip(self, serializer):
+        departure_time = serializer.validated_data.get('departure_time')
+        route = serializer.validated_data.get('route')
+        vehicle = serializer.validated_data.get('vehicle')
+        driver = serializer.validated_data.get('driver')
 
-            # Kiểm tra điểm xuất phát hợp lệ
-            last_trip = Trip.objects.filter(
-                is_active=True,
-                departure_time__lt=departure_time,
-                driver=driver,
-                vehicle=vehicle
-            ).order_by('-departure_time').first()
+        arrival_time = self.calculate_arrival_time(departure_time, route.estimated_time)
 
-            if last_trip and route.departure_point != last_trip.route.destination_point:
-                return error_response(INVALID_ROUTE_LOCATION.format(current_location=last_trip.route.destination_point,departure_location=route.departure_point))
+        self.check_schedule_conflicts(departure_time, arrival_time, driver, vehicle)
+        self.check_route_validity(departure_time, route, driver, vehicle)
 
-            # Lưu chuyến
-            trip = serializer.save()
-            return success_response(CREATE_SUCCESS.format(object="Chuyến"), tripserializer(trip).data)
-        return error_response(serializer.errors,CREATE_ERROR)
+        trip = serializer.save(arrival_time=arrival_time)
+        return trip
+
+    def calculate_arrival_time(self, departure_time, estimated_time):
+        return departure_time + timedelta(
+            hours=estimated_time.hour,
+            minutes=estimated_time.minute,
+            seconds=estimated_time.second
+        )
+
+    def check_schedule_conflicts(self, departure_time, arrival_time, driver, vehicle):
+        overlapping_trips = Trip.objects.filter(
+            is_active=True,
+            departure_time__lt=arrival_time,
+            arrival_time__gt=departure_time
+        ).filter(
+            Q(driver=driver) | Q(vehicle=vehicle)
+        )
+        if overlapping_trips.exists():
+            raise Exception(BUSY)  # hoặc return error_response ngay trong hàm gọi (cần xử lý phù hợp)
+
+    def check_route_validity(self, departure_time, route, driver, vehicle):
+        last_trip = Trip.objects.filter(
+            is_active=True,
+            departure_time__lt=departure_time,
+            driver=driver,
+            vehicle=vehicle
+        ).order_by('-departure_time').first()
+
+        if last_trip and route.departure_point != last_trip.route.destination_point:
+            raise Exception(INVALID_ROUTE_LOCATION.format(
+                current_location=last_trip.route.destination_point,
+                departure_location=route.departure_point
+            ))
+    def create_tickets_for_trip(self, trip):
+        vehicle = trip.vehicle
+        if vehicle and vehicle.chair:
+            tickets = []
+            for seat_num in range(1, vehicle.chair + 1):
+                ticket = Ticket(
+                    trip=trip,
+                    seat_number=str(seat_num),
+                    status='available',
+                    passenger_name='',
+                    passenger_phone='',
+                    passenger_email='',
+                )
+                tickets.append(ticket)
+            Ticket.objects.bulk_create(tickets)
+        
+        tickets = Ticket.objects.filter(trip=trip)
+        tickets_data = ticketserializer(tickets, many=True).data
+        return tickets_data
 class updatetripview(APIView):
     def put(self, request, pk):
         trip = get_object_or_404(Trip, pk=pk)

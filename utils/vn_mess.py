@@ -42,3 +42,6 @@ INVALID_ACTIVE = "Trường is_active phải là kiểu boolean."
 BUSY = "Tài xế hoặc xe đã bận trong khoảng thời gian này."
 INVALID_ROUTE_LOCATION = "Tài xế và xe hiện đang ở {current_location}, không thể khởi hành từ {departure_location}."
 START = "Đã xuất phát"
+
+# Vé
+NOT_DELETE_TICKET_INVOICE = "Không thể xoá vé đã có hoá đơn."
