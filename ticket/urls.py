@@ -2,10 +2,10 @@ from django.urls import path
 from .views import *
 
 urlpatterns = [
-    path('create', createticketview.as_view(), name='create-ticket'),
-    path('getlist/<int:trip_id>', getticketbylist.as_view(), name='create-ticket'),
-    path('<int:pk>/detail/', ticketdetailview.as_view(), name='ticket-delete'),
-    path('<int:pk>/update/', updateticketview.as_view(), name='ticket-update'),
-    path('<int:pk>/delete/', deletetticketview.as_view(), name='ticket-delete'),
+    path('create', CreateTicketView.as_view(), name='create-ticket'),
+    path('getlist/<int:trip_id>', GetListTicketbyTrip.as_view(), name='get-list'),
+    path('<int:pk>/detail/', TicketDetailView.as_view(), name='ticket-detail'),
+    path('<int:pk>/update/', UpdateTicketView.as_view(), name='ticket-update'),
+    path('<int:pk>/delete/', DeleteTicketView.as_view(), name='ticket-delete'),
 ]
 

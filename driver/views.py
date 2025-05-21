@@ -16,7 +16,7 @@ class CreateDriverView(APIView):
             return success_response(CREATE_SUCCESS,serializer.data)
         return error_response(serializer.errors)
         
-class updatedriverview(APIView):
+class UpdateDriverView(APIView):
     def put(self, request,pk):
         try:
             driver = Driver.objects.get(pk=pk)
@@ -28,7 +28,7 @@ class updatedriverview(APIView):
             return success_response(UPDATE_SUCCESS.format(object="thông tin Tài xế"),serializer.data)
         return error_response(serializer.error_messages)
     
-class listdriverview(APIView):
+class ListDriverView(APIView):
     def get(self, request):
         driver = Driver.objects.all()
         if not driver.exists():
@@ -36,7 +36,7 @@ class listdriverview(APIView):
         serializer = DriverSerializer(driver, many=True)
         return success_response(GET_SUCCESS.format(object="Tài xế"), serializer.data)
     
-class deletedriverview(APIView):
+class DeleteDriverView(APIView):
     def delete(self, request, pk):
         try:
             driver = Driver.objects.get(pk=pk)
@@ -49,7 +49,7 @@ class deletedriverview(APIView):
         return error_response(serializer.errors)
     
 @api_view(['GET'])
-def getdriverbyidview(request,id):
+def get_driver_by_id_view(request,id):
     driver = Driver.objects.filter(id=id)
     serializer = DriverSerializer(driver, many = True)
     if not driver.exists():

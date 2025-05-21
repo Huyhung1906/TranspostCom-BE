@@ -101,7 +101,7 @@ class ListUsersView(APIView):
         return success_response(GET_SUCCESS.format(object="Người dùng"), serializer.data)
 
 @api_view(['GET'])
-def GetUserbyIdView(request, id):
+def get_user_by_id_view(request, id):
     user = User.objects.filter(id=id)
     serializer = UserSerializer(user, many=True)
     if not user.exists():
@@ -109,7 +109,7 @@ def GetUserbyIdView(request, id):
     return success_response(GET_DETAIL_SUCCESS.format(object=f"Người dùng id:{id}"),serializer.data)
 
 @api_view(['GET'])
-def GetUserbyTokenView(request, accesstoken):
+def get_user_by_token_view(request, accesstoken):
     try:
         user = User.objects.get(accesstoken=accesstoken)
     except User.DoesNotExist:

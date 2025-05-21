@@ -2,7 +2,7 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import tripserializer
+from .serializers import TripSerializer
 from .models import Trip
 from utils.customresponse import *
 from utils.vn_mess import *
@@ -11,18 +11,18 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from datetime import datetime, time,timedelta
 from django.utils.dateparse import parse_date, parse_datetime
-from ticket.serializers import ticketserializer  # Import serializer vé
+from ticket.serializers import TicketSerializer  # Import serializer vé
 
 
-class createtripview(APIView):
+class CreateTripView(APIView):
     def post(self, request, format=None):
-        serializer = tripserializer(data=request.data)
+        serializer = TripSerializer(data=request.data)
         if serializer.is_valid():
             trip = self.create_trip(serializer)
             tickets_data = self.create_tickets_for_trip(trip)
             
             response_data = {
-                "trip": tripserializer(trip).data,
+                "trip": TripSerializer(trip).data,
                 "tickets": tickets_data
             }
             return success_response(CREATE_SUCCESS.format(object="Chuyến"), response_data)
@@ -91,12 +91,12 @@ class createtripview(APIView):
             Ticket.objects.bulk_create(tickets)
         
         tickets = Ticket.objects.filter(trip=trip)
-        tickets_data = ticketserializer(tickets, many=True).data
+        tickets_data = TicketSerializer(tickets, many=True).data
         return tickets_data
-class updatetripview(APIView):
+class UpdateTripView(APIView):
     def put(self, request, pk):
         trip = get_object_or_404(Trip, pk=pk)
-        serializer = tripserializer(trip, data=request.data, partial=True)
+        serializer = TripSerializer(trip, data=request.data, partial=True)
         if serializer.is_valid():
             departure_time = serializer.validated_data.get('departure_time', trip.departure_time)
             route = serializer.validated_data.get('route', trip.route)
@@ -140,18 +140,18 @@ class updatetripview(APIView):
 
         return error_response(serializer.errors, UPDATE_ERROR.format(object="Chuyến"))
 
-class deletetripview(APIView):
+class DeleteTripView(APIView):
     def delete(self, request, pk):
         try:
             trip = Trip.objects.get(pk=pk)
         except Trip.DoesNotExist:
             return error_response(NOT_FOUND.format(object="Chuyến"))
-        serializer = tripserializer(trip,data = request.data,partial= True)
+        serializer = TripSerializer(trip,data = request.data,partial= True)
         trip.delete()
         if serializer.is_valid():
             return success_response(DELETE_SUCCESS.format(object="Chuyến"),serializer.data)
         return error_response(serializer.errors)
-class tripbydateview(APIView):
+class TripbyDateView(APIView):
     def get(self, request):
         date_str = request.query_params.get('date')
         if not date_str:
@@ -163,9 +163,9 @@ class tripbydateview(APIView):
         except ValueError:
             return error_response(INVALID_DATE)
         trips = Trip.objects.filter(departure_time__date=date_obj)
-        serializer = tripserializer(trips, many=True)
+        serializer = TripSerializer(trips, many=True)
         return success_response(FOUND_TRIPS_BY_DATE.format(count=len(serializer.data), date=date_str),data=serializer.data)
-class tripbytimeondayview(APIView):
+class TripbyTimeonDayView(APIView):
     def get(self, request):
         date_str = request.query_params.get('date')
         start_time_str = request.query_params.get('start_time')
@@ -182,10 +182,10 @@ class tripbytimeondayview(APIView):
             departure_time__date=date_obj,
             departure_time__time__gte=start_time_obj,
         )
-        serializer = tripserializer(trips, many=True)
+        serializer = TripSerializer(trips, many=True)
         return success_response(FOUND_TRIPS_BY_TIME_ON_DAY.format(count=len(serializer.data),start_time=start_time_str,date=date_str),data=serializer.data)   
     
-class tripbyroutebiew(APIView):
+class TripbyRouteView(APIView):
     def get(self, request):
         route_id = request.query_params.get('route_id')
         if not route_id:
@@ -193,14 +193,14 @@ class tripbyroutebiew(APIView):
         
         try:
             trips = Trip.objects.filter(route__id=route_id)
-            serializer = tripserializer(trips, many=True)
+            serializer = TripSerializer(trips, many=True)
             return success_response(
                 FOUND_TRIPS_BY_ROUTE.format(count=len(serializer.data), route_id=route_id),
                 data=serializer.data
             )
         except Exception as e:
             return error_response(str(e))
-class createmultipletripsview(APIView):
+class CreateMutiTripView(APIView):
     def post(self, request):
         try:
             route_id = request.data['route_id']
@@ -230,7 +230,7 @@ class createmultipletripsview(APIView):
             trips_created.append(trip)
             current_date += timedelta(days=1)
 
-        serializer = tripserializer(trips_created, many=True)
+        serializer = TripSerializer(trips_created, many=True)
         return success_response(
             CREATED_MULTIPLE_TRIPS.format(
                 count=len(trips_created),
@@ -255,12 +255,12 @@ class UpdateTripIsActiveView(APIView):
             return error_response(INVALID_ACTIVE)
         trip.is_active = is_active
         trip.save()
-        serializer = tripserializer(trip)
+        serializer = TripSerializer(trip)
         return success_response(
             UPDATE_SUCCESS.format(object="Trạng thái Chuyến đi"),
             data=serializer.data
         )
-class starttripview(APIView):
+class StartTripView(APIView):
     def post(self, request, pk):
         trip = get_object_or_404(Trip, pk=pk)
 

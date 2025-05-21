@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import Route
 
-class routeserializer(serializers.ModelSerializer):
+class RouteSerializer(serializers.ModelSerializer):
     code = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
     class Meta:

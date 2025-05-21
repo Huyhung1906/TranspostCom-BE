@@ -1,16 +1,16 @@
 from rest_framework import serializers
 from .models import Trip
 from driver.serializers import DriverSerializer
-from vehicle.serializers import vehicleserializer
-from route.serializers import routeserializer
+from vehicle.serializers import VehicleSerializer
+from route.serializers import RouteSerializer
 from driver.models import Driver
 from vehicle.models import Vehicle
 from route.models import Route
 
-class tripserializer(serializers.ModelSerializer):
+class TripSerializer(serializers.ModelSerializer):
     driver = DriverSerializer(read_only=True)
-    vehicle = vehicleserializer(read_only=True)
-    route = routeserializer(read_only=True)
+    vehicle = VehicleSerializer(read_only=True)
+    route = RouteSerializer(read_only=True)
     driver_id = serializers.PrimaryKeyRelatedField(
         queryset=Driver.objects.all(), write_only=True, source='driver'
     )
