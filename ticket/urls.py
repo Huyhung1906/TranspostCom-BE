@@ -8,4 +8,4 @@ urlpatterns = [
     path('<int:pk>/update/', UpdateTicketView.as_view(), name='ticket-update'),
     path('<int:pk>/delete/', DeleteTicketView.as_view(), name='ticket-delete'),
 ]
-
+    

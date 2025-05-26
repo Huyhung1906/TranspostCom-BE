@@ -7,7 +7,7 @@ from .models import Trip
 from utils.customresponse import *
 from utils.vn_mess import *
 from ticket.models import Ticket 
-from django.db.models import Q
+from django.db.models import Q,Count
 from django.shortcuts import get_object_or_404
 from datetime import datetime, time,timedelta
 from django.utils.dateparse import parse_date, parse_datetime
@@ -200,6 +200,38 @@ class TripbyRouteView(APIView):
             )
         except Exception as e:
             return error_response(str(e))
+class TripbyRouteDateView(APIView):
+    def get(self, request):
+        route_id = request.query_params.get('route_id')
+        date_str = request.query_params.get('date')  # Expecting 'YYYY-MM-DD'
+
+        if not route_id or not date_str:
+            return error_response(MISSING_PARAM.format(params="route_id và date"))
+
+        try:
+            date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+            start_datetime = datetime.combine(date_obj, datetime.min.time())
+            end_datetime = datetime.combine(date_obj, datetime.max.time())
+
+            trips = Trip.objects.filter(
+                route__id=route_id,
+                departure_time__range=(start_datetime, end_datetime),
+                is_active=True
+            ).annotate(
+                total_tickets=Count('ticket'),
+                sold_tickets=Count('ticket', filter=~Q(ticket__status='available'))
+            ).order_by('departure_time')
+
+            serializer = TripSerializer(trips, many=True)
+            return success_response(
+                FOUND_TRIPS_BY_ROUTE.format(count=len(serializer.data), route_id=route_id),
+                data=serializer.data
+            )
+        except ValueError:
+            return error_response("Sai định dạng ngày. Định dạng đúng là YYYY-MM-DD.")
+        except Exception as e:
+            return error_response(str(e))
+
 class CreateMutiTripView(APIView):
     def post(self, request):
         try:

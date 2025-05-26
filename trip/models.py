@@ -23,7 +23,6 @@ class Trip(models.Model):
 
     def __str__(self):
         return f"Chuyến #{self.id} - {self.route.code} ({self.departure_time.strftime('%d/%m/%Y %H:%M')})"
-
     class Meta:
         db_table = 'trip'
         managed = False

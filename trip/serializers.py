@@ -11,6 +11,8 @@ class TripSerializer(serializers.ModelSerializer):
     driver = DriverSerializer(read_only=True)
     vehicle = VehicleSerializer(read_only=True)
     route = RouteSerializer(read_only=True)
+    total_tickets = serializers.IntegerField(read_only=True)
+    sold_tickets = serializers.IntegerField(read_only=True)
     driver_id = serializers.PrimaryKeyRelatedField(
         queryset=Driver.objects.all(), write_only=True, source='driver'
     )
@@ -30,6 +32,8 @@ class TripSerializer(serializers.ModelSerializer):
             'route', 'route_id',
             'departure_time',
             'arrival_time',
+            'total_tickets',
+            'sold_tickets',
             'price',
             'notes',
             'is_active'

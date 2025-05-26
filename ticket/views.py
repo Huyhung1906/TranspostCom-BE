@@ -55,7 +55,7 @@ class DeleteTicketView(APIView):
         ticket.user = None
         ticket.save()
         return success_response(DELETE_SUCCESS.format(object="Vé đã mua"))
-    
+
 class TicketDetailView(APIView):
     def get(self, request, pk):
         try:
