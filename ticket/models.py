@@ -9,8 +9,12 @@ class Ticket(models.Model):
     passenger_email = models.EmailField(blank=True, null=True)                    # emailnguoidi
     invoice = models.ForeignKey('invoice.Invoice', on_delete=models.SET_NULL, null=True, blank=True)  # hoadon
     user = models.ForeignKey('user.User', on_delete=models.SET_NULL, null=True, blank=True) # khachhang
+    luggage_weight = models.IntegerField(blank=True,null=True)
+    has_child_under_6 = models.BooleanField(default=False)
+    pickup_point = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
         managed = False
         unique_together = ('trip', 'seat_number')
         db_table = 'ticket'
+    
