@@ -7,6 +7,8 @@ from .serializers import TicketSerializer
 from utils.customresponse import *
 from utils.vn_mess import *
 from trip.models import Trip
+from rest_framework.permissions import IsAuthenticated
+
 from rest_framework.generics import UpdateAPIView
 class CreateTicketView(APIView):
     def post(self, request):
@@ -64,3 +66,12 @@ class TicketDetailView(APIView):
             return error_response(NOT_FOUND.format(object="Vé"))
         serializer = TicketSerializer(ticket)
         return success_response(GET_DETAIL_SUCCESS.format(object="Vé"),serializer.data)
+    
+class MyTicketsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        tickets = Ticket.objects.filter(user=user).select_related('trip')
+        serializer = TicketSerializer(tickets, many=True)
+        return Response({'data': serializer.data})

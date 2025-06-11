@@ -25,4 +25,5 @@ urlpatterns = [
     path('route/', include('route.urls')),
     path('trip/', include('trip.urls')),
     path('ticket/', include('ticket.urls')),
+    path('chatbox/', include('chatbox.urls')),
 ]

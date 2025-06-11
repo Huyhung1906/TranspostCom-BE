@@ -7,5 +7,7 @@ urlpatterns = [
     path('<int:pk>/detail/', TicketDetailView.as_view(), name='ticket-detail'),
     path('<int:pk>/update/', UpdateTicketView.as_view(), name='ticket-update'),
     path('<int:pk>/delete/', DeleteTicketView.as_view(), name='ticket-delete'),
+    path('my-tickets/', MyTicketsView.as_view(), name='my-tickets'),
+
 ]
     

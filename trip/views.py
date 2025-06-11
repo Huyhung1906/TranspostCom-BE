@@ -12,7 +12,11 @@ from django.shortcuts import get_object_or_404
 from datetime import datetime, time,timedelta
 from django.utils.dateparse import parse_date, parse_datetime
 from ticket.serializers import TicketSerializer  # Import serializer vé
-
+from ticket.models import Ticket
+from driver.models import Driver
+from decimal import Decimal
+from route.models import Route
+from vehicle.models import Vehicle
 
 class CreateTripView(APIView):
     def post(self, request, format=None):
@@ -20,7 +24,6 @@ class CreateTripView(APIView):
         if serializer.is_valid():
             trip = self.create_trip(serializer)
             tickets_data = self.create_tickets_for_trip(trip)
-            
             response_data = {
                 "trip": TripSerializer(trip).data,
                 "tickets": tickets_data
@@ -114,7 +117,7 @@ class UpdateTripView(APIView):
                 is_active=True,
                 departure_time__lt=arrival_time,
                 arrival_time__gt=departure_time
-            ).exclude(pk=trip.pk).filter(
+            ).exclude(pk=trip.pk).filter(   
                 Q(driver=driver) | Q(vehicle=vehicle)
             )
             if overlapping_trips.exists():
@@ -233,6 +236,7 @@ class TripbyRouteDateView(APIView):
             return error_response(str(e))
 
 class CreateMutiTripView(APIView):
+    
     def post(self, request):
         try:
             route_id = request.data['route_id']
@@ -241,6 +245,8 @@ class CreateMutiTripView(APIView):
             start_date = parse_date(request.data['start_date'])
             end_date = parse_date(request.data['end_date'])
             departure_time = datetime.strptime(request.data['time'], "%H:%M").time()
+            price = Decimal(request.data['price'])  # 🔥 Thêm dòng này
+
         except KeyError as e:
             return error_response(MISSING_PARAM.format(param=str(e)))
         except ValueError:
@@ -249,19 +255,35 @@ class CreateMutiTripView(APIView):
         if start_date > end_date:
             return error_response(START_DATE_GREATER_THAN_END_DATE)
 
+        try:
+            route = Route.objects.get(id=route_id)
+            vehicle = Vehicle.objects.get(id=vehicle_id)
+            driver = Driver.objects.get(id=driver_id)
+        except Route.DoesNotExist:
+            return error_response("Tuyến không tồn tại")
+        except Vehicle.DoesNotExist:
+            return error_response("Xe không tồn tại")
+        except Driver.DoesNotExist:
+            return error_response("Tài xế không tồn tại")
+
         trips_created = []
+
         current_date = start_date
         while current_date <= end_date:
             departure_datetime = datetime.combine(current_date, departure_time)
+            arrival_time = self.calculate_arrival_time(departure_datetime, route.estimated_time)
+
             trip = Trip.objects.create(
-                route_id=route_id,
-                vehicle_id=vehicle_id,
-                driver_id=driver_id,
-                departure_time=departure_datetime
+                route=route,
+                vehicle=vehicle,
+                driver=driver,
+                departure_time=departure_datetime,
+                arrival_time=arrival_time,
+                price=price
             )
+            self.create_tickets_for_trip(trip)
             trips_created.append(trip)
             current_date += timedelta(days=1)
-
         serializer = TripSerializer(trips_created, many=True)
         return success_response(
             CREATED_MULTIPLE_TRIPS.format(
@@ -272,6 +294,29 @@ class CreateMutiTripView(APIView):
             ),
             data=serializer.data
         )
+    def calculate_arrival_time(self, departure_time, estimated_time):
+        return departure_time + timedelta(
+            hours=estimated_time.hour,
+            minutes=estimated_time.minute,
+            seconds=estimated_time.second
+        )
+
+    def create_tickets_for_trip(self, trip):
+        vehicle = trip.vehicle
+        if vehicle and vehicle.chair:
+            tickets = [
+                Ticket(
+                    trip=trip,
+                    seat_number=str(seat_num),
+                    status='available',
+                    passenger_name='',
+                    passenger_phone='',
+                    passenger_email='',
+                )
+                for seat_num in range(1, vehicle.chair + 1)
+            ]
+            Ticket.objects.bulk_create(tickets)
+
 class UpdateTripIsActiveView(APIView):
     def patch(self, request, pk):
         try:
@@ -304,3 +349,19 @@ class StartTripView(APIView):
             "notes": trip.notes
         }
         return success_response(UPDATE_SUCCESS.format(object="Trạng thái xuất phát"),data)
+
+class TripDetailAPIView(APIView):
+    def get(self, request, trip_id):
+        try:
+            trip = Trip.objects.select_related('route', 'vehicle', 'driver').get(id=trip_id)
+        except Trip.DoesNotExist:
+            return error_response(NOT_FOUND)
+
+        tickets = Ticket.objects.filter(trip=trip)
+    
+        trip_data = TripSerializer(trip).data
+        trip_data['tickets'] = TicketSerializer(tickets, many=True).data  # 👈 thêm vào dict
+
+        return success_response(GET_SUCCESS, {
+            'trip': trip_data  # 👈 tất cả trong "trip"
+        })
