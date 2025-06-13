@@ -17,4 +17,4 @@ class Ticket(models.Model):
         managed = False
         unique_together = ('trip', 'seat_number')
         db_table = 'ticket'
-    
+            

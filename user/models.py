@@ -30,7 +30,17 @@ class User(AbstractBaseUser,PermissionsMixin):
     last_login = models.DateTimeField(default=timezone.now, blank=True, null=True)
     is_superuser = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
-
+    level = models.CharField(
+            max_length=20,
+            choices=[
+                ('silver', 'Thành viên Bạc'),
+                ('gold', 'Thành viên Vàng'),
+                ('diamond', 'Thành viên Kim Cương'),
+            ],
+            default='silver',
+            blank=True,
+            null=True,
+        )
     groups = None
     user_permissions = None
     

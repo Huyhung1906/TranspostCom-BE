@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'route',
     'chatbox',
     'trip',
+    'vnpay_python',
 ]
 
 MIDDLEWARE = [
@@ -155,3 +156,13 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'public')
 
 # URL để truy cập các file media
 MEDIA_URL = '/media/'
+STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, 'static/'),
+)
+STATIC_URL = '/static/'
+# VNPAY CONFIG
+VNPAY_RETURN_URL = 'http://127.0.0.1:8000/pay/payment_return'  # get from config
+VNPAY_PAYMENT_URL = 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'  # get from config
+VNPAY_API_URL = 'https://sandbox.vnpayment.vn/merchant_webapi/api/transaction'
+VNPAY_TMN_CODE = 'HFD33DWY'  # Website ID in VNPAY System, get from config
+VNPAY_HASH_SECRET_KEY = '4FBI5SF2X8DANHMFIY0V29OKPB25I0KN'  # Secret key for create checksum,get from config

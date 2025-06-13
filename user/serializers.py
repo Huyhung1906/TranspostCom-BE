@@ -8,7 +8,7 @@ from utils.vn_mess import *
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id','username','password','fullname','phone','role','email','is_active']
+        fields = ['id','username','password','fullname','phone','role','email','is_active','level']
         extra_kwargs = {
             'password' : {'write_only': True}
         }

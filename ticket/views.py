@@ -74,4 +74,4 @@ class MyTicketsView(APIView):
         user = request.user
         tickets = Ticket.objects.filter(user=user).select_related('trip')
         serializer = TicketSerializer(tickets, many=True)
-        return Response({'data': serializer.data})
+        return success_response(GET_DETAIL_SUCCESS,{'data': serializer.data})

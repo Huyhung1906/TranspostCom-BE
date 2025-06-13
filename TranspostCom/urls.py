@@ -26,4 +26,5 @@ urlpatterns = [
     path('trip/', include('trip.urls')),
     path('ticket/', include('ticket.urls')),
     path('chatbox/', include('chatbox.urls')),
+    path('pay/', include('vnpay_python.urls')),
 ]
