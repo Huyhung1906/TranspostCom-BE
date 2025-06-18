@@ -45,3 +45,30 @@ START = "Đã xuất phát"
 
 # Vé
 NOT_DELETE_TICKET_INVOICE = "Không thể xoá vé đã có hoá đơn."
+
+# Hóa đơn
+# utils/vn_mess.py
+
+INVOICE_CREATE_SUCCESS = "Tạo hóa đơn thành công."
+INVOICE_LIST_SUCCESS = "Lấy danh sách hóa đơn thành công."
+INVOICE_DETAIL_SUCCESS = "Lấy chi tiết hóa đơn thành công."
+INVOICE_CREATE_NO_TICKETS = "Vui lòng chọn ít nhất một vé để tạo hóa đơn."
+INVOICE_CREATE_TICKET_INVALID = "Không tìm thấy vé hợp lệ để tạo hóa đơn."
+
+PAYMENT_CREATE_SUCCESS = "Tạo giao dịch thanh toán thành công."
+PAYMENT_LIST_SUCCESS = "Lấy danh sách giao dịch thanh toán thành công."
+NO_VALID_TICKETS="Không giá trị"
+
+NO_SELECT = "Bạn chưa chọn ghế nào."
+SEAT_NOT_AVAILABLE = "Một số vé đã được giữ hoặc bán."
+SUCCESS_HOLD_SEAT = "Giữ vé thành công. Vui lòng thanh toán trong 20 phút."
+SUCCESS_RELEASE_SEAT ="Huỷ giữ vé thành công."
+
+LACK_INFO = "Thiếu thông tin để tạo hóa đơn."
+SEAT_DEFIRENT_PESS ="Số lượng hành khách không khớp với số vé."
+SEAT_NOT_TRUE = "Vé không hợp lệ hoặc đã được thanh toán."
+
+LACK_ID_INVOICE = "Thiếu mã hóa đơn."
+URL_SUCCESS ="Tạo URL thanh toán thành công."
+
+LACK_INFO_INVOICE ="Vui lòng cung cấp mã hóa đơn hoặc mã vé."

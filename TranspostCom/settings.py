@@ -26,6 +26,8 @@ SECRET_KEY = 'django-insecure-k2wnx^z5sqkx765#ug%ek$-f$a^^s)5-j*cp82&d+y^l5808@l
 DEBUG = True
 
 ALLOWED_HOSTS = []
+TIME_ZONE = 'Asia/Ho_Chi_Minh'
+USE_TZ = False
 
 
 # Application definition
@@ -62,6 +64,7 @@ MIDDLEWARE = [
 ]
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
+    "http://localhost:1906",
 ]
 
 ROOT_URLCONF = 'TranspostCom.urls'
@@ -166,3 +169,7 @@ VNPAY_PAYMENT_URL = 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'  # get 
 VNPAY_API_URL = 'https://sandbox.vnpayment.vn/merchant_webapi/api/transaction'
 VNPAY_TMN_CODE = 'HFD33DWY'  # Website ID in VNPAY System, get from config
 VNPAY_HASH_SECRET_KEY = '4FBI5SF2X8DANHMFIY0V29OKPB25I0KN'  # Secret key for create checksum,get from config
+CLIENT_BASE_URL = "http://localhost:5173"  # hoặc domain thật nếu đã deploy
+
+VNPAY_FRONTEND_SUCCESS_URL = "http://localhost:5173/payment/success"
+VNPAY_FRONTEND_FAIL_URL = "http://localhost:5173/payment/fail"

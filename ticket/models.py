@@ -12,6 +12,7 @@ class Ticket(models.Model):
     luggage_weight = models.IntegerField(blank=True,null=True)
     has_child_under_6 = models.BooleanField(default=False)
     pickup_point = models.CharField(max_length=255, blank=True, null=True)
+    reserved_until = models.DateTimeField(null=True, blank=True)  # giữ đến thời điểm này
 
     class Meta:
         managed = False

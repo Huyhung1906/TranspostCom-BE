@@ -1,13 +1,13 @@
 from django.urls import path
-from .views import *
+from . import views
 
 urlpatterns = [
-    path('create/', InvoiceCreateView.as_view(), name='invoice-create'),
-    path('create-with-tickets/', InvoiceCreateWithTicketsView.as_view(), name='invoice-create-with-tickets'),
-    path('list/', InvoiceListView.as_view(), name='invoice-list'),
-    path('<int:pk>/detail/', InvoiceDetailView.as_view(), name='invoice-detail'),
+    path('create/', views.InvoiceCreateWithTicketsView.as_view(), name='create-invoice'),
+    path('hold/', views.HoldTicketView.as_view(), name='hold-ticket'),
+    path('release/', views.ReleaseTicketView.as_view(), name='release-ticket'),
+    path('vnpay-url/', views.VnpayPaymentUrlView.as_view(), name='vnpay-url'),
+    path('vnpay-return/', views.vnpay_return, name='vnpay-return'),
+    path('list/', views.UserInvoiceListView.as_view(), name='list'),
+    path('lookup/', views.InvoiceLookupView.as_view(), name='invoice-lookup'),
 
-    # Payment Transactions
-    path('payments/create/', PaymentTransactionCreateView.as_view(), name='payment-create'),
-    path('payments/list/', PaymentTransactionListView.as_view(), name='payment-list'),
 ]
