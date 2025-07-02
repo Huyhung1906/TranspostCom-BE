@@ -28,4 +28,6 @@ urlpatterns = [
     path('chatbox/', include('chatbox.urls')),
     path('invoice/', include('invoice.urls')),
     path('pay/', include('vnpay_python.urls')),
+    path('reports/', include('reports.urls')),
+
 ]
