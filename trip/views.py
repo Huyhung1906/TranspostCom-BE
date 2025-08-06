@@ -29,30 +29,23 @@ class CreateTripView(APIView):
                 "tickets": tickets_data
             }
             return success_response(CREATE_SUCCESS.format(object="Chuyến"), response_data)
-
         return error_response(serializer.errors, CREATE_ERROR)
-
     def create_trip(self, serializer):
         departure_time = serializer.validated_data.get('departure_time')
         route = serializer.validated_data.get('route')
         vehicle = serializer.validated_data.get('vehicle')
         driver = serializer.validated_data.get('driver')
-
         arrival_time = self.calculate_arrival_time(departure_time, route.estimated_time)
-
         self.check_schedule_conflicts(departure_time, arrival_time, driver, vehicle)
         self.check_route_validity(departure_time, route, driver, vehicle)
-
         trip = serializer.save(arrival_time=arrival_time)
         return trip
-
     def calculate_arrival_time(self, departure_time, estimated_time):
         return departure_time + timedelta(
             hours=estimated_time.hour,
             minutes=estimated_time.minute,
             seconds=estimated_time.second
         )
-
     def check_schedule_conflicts(self, departure_time, arrival_time, driver, vehicle):
         overlapping_trips = Trip.objects.filter(
             is_active=True,
@@ -105,14 +98,12 @@ class UpdateTripView(APIView):
             route = serializer.validated_data.get('route', trip.route)
             vehicle = serializer.validated_data.get('vehicle', trip.vehicle)
             driver = serializer.validated_data.get('driver', trip.driver)
-
             est_time = route.estimated_time
             arrival_time = departure_time + timedelta(
                 hours=est_time.hour,
                 minutes=est_time.minute,
                 seconds=est_time.second
             )
-            # Kiểm tra trùng lịch (ngoại trừ chính trip đang update)
             overlapping_trips = Trip.objects.filter(
                 is_active=True,
                 departure_time__lt=arrival_time,
@@ -122,27 +113,20 @@ class UpdateTripView(APIView):
             )
             if overlapping_trips.exists():
                 return error_response(BUSY)
-
-            # Kiểm tra điểm xuất phát hợp lệ
             last_trip = Trip.objects.filter(
                 is_active=True,
                 departure_time__lt=departure_time,
                 driver=driver,
                 vehicle=vehicle
             ).exclude(pk=trip.pk).order_by('-departure_time').first()
-
             if last_trip and route.departure_point != last_trip.route.destination_point:
                 return error_response(INVALID_ROUTE_LOCATION.format(
                     current_location=last_trip.route.destination_point,
                     departure_location=route.departure_point
                 ))
-
-            # Cập nhật chuyến
             serializer.save()
             return success_response(UPDATE_SUCCESS.format(object="Chuyến"), serializer.data)
-
         return error_response(serializer.errors, UPDATE_ERROR.format(object="Chuyến"))
-
 class DeleteTripView(APIView):
     def delete(self, request, pk):
         try:
@@ -236,7 +220,6 @@ class TripbyRouteDateView(APIView):
             return error_response(str(e))
 
 class CreateMutiTripView(APIView):
-    
     def post(self, request):
         try:
             route_id = request.data['route_id']
@@ -265,9 +248,7 @@ class CreateMutiTripView(APIView):
             return error_response("Xe không tồn tại")
         except Driver.DoesNotExist:
             return error_response("Tài xế không tồn tại")
-
         trips_created = []
-
         current_date = start_date
         while current_date <= end_date:
             departure_datetime = datetime.combine(current_date, departure_time)
@@ -292,7 +273,7 @@ class CreateMutiTripView(APIView):
                 end_date=end_date,
                 time=departure_time.strftime("%H:%M")
             ),
-            data=serializer.data
+            sdata=serializer.data
         )
     def calculate_arrival_time(self, departure_time, estimated_time):
         return departure_time + timedelta(
@@ -300,7 +281,6 @@ class CreateMutiTripView(APIView):
             minutes=estimated_time.minute,
             seconds=estimated_time.second
         )
-
     def create_tickets_for_trip(self, trip):
         vehicle = trip.vehicle
         if vehicle and vehicle.chair:
@@ -316,7 +296,6 @@ class CreateMutiTripView(APIView):
                 for seat_num in range(1, vehicle.chair + 1)
             ]
             Ticket.objects.bulk_create(tickets)
-
 class UpdateTripIsActiveView(APIView):
     def patch(self, request, pk):
         try:
@@ -360,8 +339,7 @@ class TripDetailAPIView(APIView):
         tickets = Ticket.objects.filter(trip=trip)
     
         trip_data = TripSerializer(trip).data
-        trip_data['tickets'] = TicketSerializer(tickets, many=True).data  # 👈 thêm vào dict
-
+        trip_data['tickets'] = TicketSerializer(tickets, many=True).data
         return success_response(GET_SUCCESS, {
-            'trip': trip_data  # 👈 tất cả trong "trip"
+            'trip': trip_data
         })

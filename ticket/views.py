@@ -17,7 +17,6 @@ class CreateTicketView(APIView):
             serializer.save()
             return success_response(CREATE_SUCCESS.format(object="Vé"),serializer.data)
         return error_response(serializer.errors,CREATE_ERROR)
-    
 class GetListTicketbyTrip(APIView):
     def get(self, request, trip_id):
         try:

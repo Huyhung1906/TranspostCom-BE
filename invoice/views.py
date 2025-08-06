@@ -73,7 +73,7 @@ class InvoiceCreateWithTicketsView(APIView):
                 ticket.passenger_name = passenger.get('name')
                 ticket.passenger_phone = passenger.get('phone')
                 ticket.passenger_email = passenger.get('email')
-                ticket.pickup_point = passenger.get('pickup_point')  # 👈 THÊM DÒNG NÀY
+                ticket.pickup_point = passenger.get('pickup_point') 
                 ticket.save()
             return success_response(CREATE_SUCCESS.format(object="hóa đơn"), InvoiceSerializer(invoice).data)
 class VnpayPaymentUrlView(APIView):

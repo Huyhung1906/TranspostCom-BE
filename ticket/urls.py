@@ -10,4 +10,3 @@ urlpatterns = [
     path('my-tickets/', MyTicketsView.as_view(), name='my-tickets'),
 
 ]
-    

@@ -65,32 +65,32 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'TranspostCom.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': config('DB_NAME'),
-        'USER': config('DB_USER'),
-        'PASSWORD': config('DB_PASSWORD'),
-        'HOST': config('DB_HOST', default='db'),  # 'db' là tên service trong docker-compose
-        'PORT': config('DB_PORT', default='3306'),
-        'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-        },
-    }
-}
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'transpostcom_db',  # Tên database của bạn
-#         'USER': 'root',         # Tên user MySQL
-#         'PASSWORD': '',  # Mật khẩu MySQL
-#         'HOST': 'localhost',  # Máy chủ database
-#         'PORT': '3306',       # Cổng mặc định của MySQL
+#         'NAME': config('DB_NAME'),
+#         'USER': config('DB_USER'),
+#         'PASSWORD': config('DB_PASSWORD'),
+#         'HOST': config('DB_HOST', default='db'),  # 'db' là tên service trong docker-compose
+#         'PORT': config('DB_PORT', default='3306'),
 #         'OPTIONS': {
 #             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
 #         },
 #     }
 # }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'transpostcom_db',  # Tên database của bạn
+        'USER': 'root',         # Tên user MySQL
+        'PASSWORD': '',  # Mật khẩu MySQL
+        'HOST': 'localhost',  # Máy chủ database
+        'PORT': '3306',       # Cổng mặc định của MySQL
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        },
+    }
+}
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},

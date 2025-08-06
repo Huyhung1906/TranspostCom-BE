@@ -25,12 +25,10 @@ class RegisterUserView(APIView):
 class LoginView(generics.GenericAPIView):
     permission_classes = [AllowAny]
     serializer_class = LoginSerializer
-
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             user = serializer.validated_data['user']
-
             # Tạo refresh và access token
             refresh = RefreshToken.for_user(user)
             access_token = str(refresh.access_token)
@@ -39,10 +37,8 @@ class LoginView(generics.GenericAPIView):
                 "user": UserSerializer(user).data,
                 "access_token": access_token
             }
-
             # Tạo response
             response = success_response(LOGIN_SUCCESS,data)
-
             response.set_cookie(
                 key='refresh_token',
                 value=refresh_token,
@@ -53,19 +49,14 @@ class LoginView(generics.GenericAPIView):
                 path='/' 
             )
             return response
-
         return error_response(serializer.errors)
-
 class RefreshTokenView(APIView):
     permission_classes = [AllowAny]
-
     def post(self, request):
         refresh_token = request.COOKIES.get('refresh_token')
-        print("🔎 Refresh token nhận được:", refresh_token)
-
+        print("Refresh token nhận được:", refresh_token)
         if not refresh_token:
             return error_response(NOT_FOUND.format(object="refresh token"))
-
         try:
             token = RefreshToken(refresh_token)
             access_token = str(token.access_token)
@@ -87,10 +78,8 @@ class RefreshTokenView(APIView):
                 path='/'
             )
             return response
-
         except Exception as e:
             return error_response(INVALID_TOKEN)
-
 class ListUsersView(APIView):
     def get(self, request):
         user = User.objects.all()
@@ -120,30 +109,22 @@ def get_user_by_token_view(request, accesstoken):
 
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]
-
     def get(self, request):
         print(request.headers)  # DEBUG
-
         user = request.user  # Django tự lấy user từ access_token trong header
-        data = {
-            "user": UserSerializer(user).data
-        }
+        data = {"user": UserSerializer(user).data}
         return success_response(GET_DETAIL_SUCCESS.format(object="Người dùng"), data)
-
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
-
     def post(self, request):
         try:
             user = request.user
             # Xóa cookie refresh_token ở trình duyệt
             response = success_response(LOGOUT_SUCCESS)
             response.delete_cookie('refresh_token')
-
             return response
         except Exception as e:
-            return error_response(SERVER_ERROR)
-        
+            return error_response(SERVER_ERROR)    
 class UpdateUserView(APIView):
     def put(self, request, pk):
         try:
@@ -154,8 +135,7 @@ class UpdateUserView(APIView):
         if serializer.is_valid():
             serializer.save()
             return success_response(UPDATE_SUCCESS.format(object="Người dùng"),serializer.data)
-        return error_response(serializer.errors)
-    
+        return error_response(serializer.errors) 
 class DeleteUserView(APIView):
     def delete(self, request, pk):
         try:

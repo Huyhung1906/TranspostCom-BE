@@ -20,7 +20,7 @@ So sánh linh hoạt, nếu là ngữ cảnh giao tiếp không cần sinh SQL.
 Q: "{question}"
 SQL:
 """
-prompt_answer = """
+prompt_answer = """     
 Câu hỏi: {question}
 SQL đã dùng: {sql}
 Kết quả truy vấn: {result}
